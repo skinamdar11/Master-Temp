@@ -1,0 +1,415 @@
+@using Assets = Sage.FA.DaaS.Resources.SFAOOnlineResources.Assets
+<div class="alpha omega company_info asset_books">
+    <!--Always visible fields-->
+    <div class="company_info asset_booksinfo mar_bot_2">
+        <div class="grid_4">
+            <label class="grid_4">Acquisition Date</label>
+            <input type="text" data-ng-model="AcquisitionDate" name="AcquisitionDate" k-format="'MM/dd/yyyy'" k-min="minDate" k-max="maxDate" data-ng-pattern="/^(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])\/(199\d|[1-9]\d{3})$/" required kendo-date-picker class="grid_4" k-on-change="SetValidationFlag(kendoEvent)" check-Acquisition-Date/>
+            <span class="field-validation-error" ng-show="AssetForm.$error.unique && AssetForm.AcquisitionDate.$dirty"><span>Acquisition Date should be greater than company start date!</span></span>
+
+            <span class="field-validation-error" data-ng-show="AssetForm.AcquisitionDate.$error.pattern"><span>Incorrect Format, should be MM/DD/YYYY</span></span>
+        </div>
+        <div class="grid_4 alpha push_0 asset_booktxtboxspacing">
+            <label class="grid_4 acquisition">Acquisition Value</label>
+            <input type="text" k-ng-model="AcquiredValueGeneral" data-ng-model="AcquiredValueGeneral" name="AcquiredValueGeneral" required kendo-numeric-text-box k-spinners="false" k-min="'-999999999999.99'" k-max="'999999999999.99'" k-format="'c'" class="grid_4" data-ng-init="AcquiredValueGeneral=AcquiredValueGeneral||0" class="grid_5" k-on-change="SetValidationFlag(kendoEvent)"/>
+        </div>
+        <div class="grid_4 alpha push_0 asset_txtboxmargin">
+            <label class="grid_4">Property Type</label>
+            <select id="ddlPropertyType" kendo-drop-down-list k-data-source="PropertyTypeAttributes" k-data-text-field="'Name'" k-data-value-field="'Code'" data-ng-model="PropertyType" k-on-change="SetUSTaxAttributes(kendoEvent)" class="grid_4">
+            </select>
+        </div>
+        <div>
+            <label class="ustax push_0">US Tax Attributes</label>
+            <div class="grid_3">
+                <label class="grid_3">Code Section</label>
+                <select id="ddlCodeSection"  kendo-drop-down-list="CS" k-data-source="CodeSections" k-data-value-field="'Code'" k-data-text-field="'Code'" data-ng-model="CodeSection" k-on-change="SetValidationFlag(kendoEvent)" class="grid_3">
+                </select>
+            </div>
+            <div class="grid_3 listeddiplimted">
+                <label class="grid_3">Listed Property</label>
+                <select id="ddlListedProperty" kendo-drop-down-list k-data-source="ListedProperty" k-data-value-field="'OptionName'" k-data-text-field="'OptionName'" data-ng-model="Listed" k-on-change="SetValidationFlag(kendoEvent)"  class="grid_3">
+                </select>
+            </div>
+
+            <div class="grid_3 listeddiplimted">
+                <label class="grid_3">Indian Reservation</label>
+                <select id="ddlIndReservation" kendo-drop-down-list="IR" data-ng-model="IndianReservation" class="grid_3" data-ng-init="IndianReservation='No'">
+                    <option value="Yes">Yes</option>
+                    <option value="No" selected="selected">No</option>
+                </select>
+            </div>
+            <div class="grid_3 listeddiplimted">
+                <label class="grid_3">Depreciation Limited?</label>
+                <select id="ddlDepreciationLtd" kendo-drop-down-list="DL" k-data-source="DeprLimited" k-data-value-field="'OptionName'" k-data-text-field="'OptionName'" data-ng-model="Limited" class="grid_3">
+                </select>
+            </div>
+
+            <div id="CustomizedFieldsmodal" class="customizedFieldsModalWindow" style="display: none;">
+                <div id="customizedFieldsGrid"></div>
+            </div>
+
+            @(Html.Kendo().Window()
+                  .Title(string.Empty)
+                  .Name("CustomizedFieldCancel")
+                  .Visible(false)
+                  .Modal(true)
+                  .Draggable(true)
+                  .Width(400)
+                  .Height(250)
+                  .Scrollable(false))
+
+            @(Html.Kendo().Window()
+                  .Title(Assets.ShowHideBookwindowTitle)
+                  .Name("ShoworhidebookWindow")
+                  .Visible(false)
+                  .Modal(true)
+                  .Draggable(true)
+                  .Width(400)
+                  .Height(250)
+                  .HtmlAttributes(new { style="height: 400px!important" })
+                  .Scrollable(false))
+        </div>
+
+    </div>
+
+    <button data-ng-click="PopulateBookParts()" data-ng-disabled="AssetForm.AcquisitionDate.$error.required || AssetForm.AcquiredValueGeneral.$error.required ||
+                             AssetForm.AcquisitionDate.$error.pattern||AssetForm.AcquisitionDate.$error.unique"
+            id="PopulateBtn" class="btn-primary">
+        {{ButtonName}}</button>
+    <!--The following UL repeats for the number of books in the company -->
+    <ul id="detailbar" kendo-panel-bar="BooksPanel" k-expand-mode="'multiple'" class="sub-panel mar_top_2">
+        <li class="k-state-active" id="PopulateBooksSubPanel" disabled="disabled">Populate Books
+
+            <div class="gridMatrix">
+	
+
+                <div class="gridMatrixLeft">
+                    <table cellpadding="0" cellspacing="0" class="first">
+                        <tr>
+                            <th>Books<img src="~/Content/Images/Book.png" class="bookimage"></th>
+                        </tr>
+                        <tr>
+                            <td>Basis</td>
+                        </tr>
+                        <tr>
+                            <td>In-Service Date</td>
+                        </tr>
+                        <tr>
+                            <td>Capital or Expense</td>
+                        </tr>
+                        <tr class="sep1  divider">
+                            <td class="" >Depreciation Inputs</td>
+                        </tr>
+                        <tr>
+                            <td>Depr Method</td>
+                        </tr>
+                        <tr>
+                            <td>Depr %</td>
+                        </tr>
+                        <tr>
+                            <td>Averaging Conv</td>
+                        </tr>
+                        <tr>
+                            <td>Estimated Life</td>
+                        </tr>
+
+                        <tr>
+                            <td>Section 179</td>
+                        </tr>
+                        <tr class="sep2 divider moreInfo">
+                            <td class="">More Information</td>
+                        </tr>
+                        <tr>
+                            <td>MACRS Bonus %</td>
+                        </tr>
+
+                        <tr >
+                            <td>MACRS Bonus $</td>
+                        </tr>
+                        <tr>
+                            <td>Business Use %</td>
+                        </tr>
+                        <tr>
+                            <td>Beginning Date</td>
+                        </tr>
+                        <tr>
+                            <td>Beginning YTD</td>
+                        </tr>
+                        <tr>
+                            <td>Beginning Accum</td>
+                        </tr>
+                        <tr class="sep2 divider" data-ng-show="hideDepreciation">
+                            <td class="">Depreciation Values</td>
+                        </tr>
+                        @{ Html.RenderPartial("DepreciationValuesLeft");}
+                        <tr>
+                            <td class="footerscroll"></td>
+                        </tr>
+
+                    </table>
+                </div>
+                <div class="gridMatrixRight">
+	    <table cellpadding="0" cellspacing="0" class="gridmatrixvalues" data-ng-repeat="books in companyBookData.Bookparts" data-ng-controller="BooksCtrl" ng-class="{'last':$last}">
+                        <tr >
+                            <th>
+                                <label data-ng-bind="books.Name"></label>
+                            </th>
+                        </tr>
+                        <tr>
+                            <td>
+                               <input type="text" id="AcquiredValue_{{books.Name}}" value="{{books.AcquiredValue}}" data-ng-model="books.AcquiredValue" k-ng-model="books.AcquiredValue" k-min="'-999999999999.99'" k-max="'999999999999.99'" kendo-numeric-text-box k-spinners="false" k-min="'0'" k-format="'c'" class="txt_dropdown assetgrid_numeric assetgrid_numericbox" lower-Than="{{AcquiredValueGeneral}}"/>
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" id="PisDate_{{books.Name}}" data-ng-model="books.PisDate" data-ng-pattern="/^(0?[1-9]|1[012])\/(0?[1-9]|[12][0-9]|3[01])\/(199\d|[1-9]\d{3})$/" kendo-date-picker k-format="'MM/dd/yyyy'"k-min="minDate" k-max="maxDate" class="txt_dropdown" name="PISDate" greater-Than="{{AcquisitionDate}}" val-pisdate/>
+
+                            </td>
+                        </tr>
+                        @*<span class="field-validation-error" data-ng-show="AssetForm.PISDate.$error.pattern"><span>Incorrect Format, should be MM/DD/YYYY</span></span>*@
+
+                        <tr>
+                            <td>
+                                <select name="Capital" id="Capital_{{books.Name}}" kendo-drop-down-list data-ng-model="books.Capitalized" data-ng-init="books.Capitalized=books.Capitalized||'Capitalized'" k-on-change="OnCapitalizedChanged(kendoEvent)" class="txt_dropdown" k-on-change="SetValidationFlagPopulatedBooks(kendoEvent)">
+                                    <option value="Capitalized">Capitalized</option>
+                                    <option value="Expensed">Expensed</option>
+                                </select></td>
+                        </tr>
+                        <tr class="sep1 divider dividerempty">
+                            <td class="dividerempty"></td>
+                        </tr>
+                        @* <tr data-ng-class-odd="'odd'" data-ng-class-even="'even'" style="border: none;class="asset_tableempty"><td></td></tr>*@
+                        <tr >
+                            <td>
+                                <select name="Depreciation" id="Depreciation_{{books.Name}}" kendo-drop-down-list="dpdDeprMethod" k-data-source="DepreciationMethods" k-data-text-field="'DepreciationMethodName'" k-data-value-field="'DepreciationMethodId'" k-on-change="OnChangeDeprMethod(kendoEvent)" data-ng-model="books.SelectedDeprMethod"
+                                        class="txt_dropdown" data-ng-disabled="IsCapitalized">
+                                </select></td>
+                        </tr>
+
+                        <tr >
+                            <td>
+                                <select name="Percentage" id="Percentage_{{books.Name}}" kendo-drop-down-list="dpdDeprPercentage" k-data-source="DepreciationPercentages" k-data-text-field="'DepreciationPercentage'" k-data-value-field="'DepreciationPercentage'" data-ng-model="books.SelectedDeprPercentage" k-on-change="OnChangeDeprPercent(kendoEvent)"
+                                        class="txt_dropdown" data-ng-disabled="IsCapitalized">
+                                </select></td>
+                        </tr>
+
+                        <tr >
+                            <td>
+                                <select name="AvgConv" id="AvgConv_{{books.Name}}" kendo-drop-down-list="dpdAvgConvention" k-data-source="AveragingConventions" k-data-text-field="'Code'" k-data-value-field="'Code'" data-ng-model="books.SelectedAvgConv" class="txt_dropdown" data-ng-disabled="IsCapitalized" auto-correct>
+                                </select></td>
+                        </tr>
+
+                        <tr >
+                            <td>
+                                <input type="text" name="EstimatedLife" id="EstimatedLife_{{books.Name}}" required data="books.EstimatedLife" year-month class="txt_dropdown" data-ng-disabled="IsCapitalized" maxlength="4" maxRange="MaxEstLife" minRange="MinEstLife">
+
+                            </td>
+                        </tr>
+
+
+                        <tr >
+                            <td>
+                                <input type="text" id="s179_{{$index}}" value="{{books.Selecteds179|currency}}" data-ng-click="S179window.open()" name="tbxS179" class="txt_dropdown" data-ng-disabled="IsCapitalized" readonly="readonly"/>
+                            </td>
+                        </tr>
+
+                        <tr class="sep2 divider dividerempty moreInfo">
+                            <td class="">
+
+                            </td>
+                        </tr>
+
+
+
+                        <!--More information Panel Bar liew below-->
+
+                        <tr >
+                            <td>
+                                <select kendo-drop-down-list="dpdMacrsBonus" id="Macrs_{{books.Name}}" k-data-source="Macrs" k-data-text-field="'Code'" k-data-value-field="'Code '" class="txt_dropdown" data-ng-model="books.SelectedMacrs" k-on-change="SetMacrsDollar(kendoEvent)" data-ng-disabled="IsCapitalized" data-ng-disabled="IsCapitalized" k-on-change="SetValidationFlagPopulatedBooks(kendoEvent)">
+                                </select></td>
+                        </tr>
+                        <tr >
+                            <td class="asset_totallable">
+                                <label class="txt_dropdown">{{books.MacrsAmt||0|currency}}</label>
+
+                            </td>
+                        </tr>
+
+                        <tr >
+                            <td>
+                                <input type="text" id="BusinessUse_{{$index}}" value="{{books.BusinessUse.Percent}}%" data-ng-init="books.BusinessUse.Percent='100'" data-ng-click="BUwindow.open(books.EstimatedLife)" class="txt_dropdown" data-ng-disabled="IsCapitalized" readonly="readonly"/><!--Business Use Base popup lie below-->
+                            </td>
+                        </tr>
+
+                        <tr >
+                            <td>
+                                <input kendo-date-picker k-format="'MM/dd/yyyy'" k-min="minDate" k-max="maxDate" type="text" data-ng-model="books.BeginDate" class="txt_dropdown" data-ng-disabled="IsCapitalized" greater-Than="{{books.PisDate}}" val-begindate/>
+                            </td>
+                        </tr>
+                        <tr >
+                            <td>
+                                <input kendo-numeric-text-box k-spinners="false" k-format="'c'" type="text" data-ng-model="books.BeginYTD" data-ng-init="books.BeginYTD=books.BeginYTD||0" data-ng-disabled="DisableBeginFields(books.BeginDate)" id="beginytd" name="beginytd" class="txt_dropdown" lower-Than="{{books.AcquiredValue}}"/>
+
+
+                            </td>
+                        </tr>
+
+                        <tr >
+                            <td>
+                                <input kendo-numeric-text-box k-spinners="false" k-format="'c'" type="text" data-ng-model="books.BeginAccum" data-ng-init="books.BeginAccum=books.BeginAccum||0" data-ng-disabled="DisableBeginFields(books.BeginDate)" id="beginaccum" name="beginaccum" class="txt_dropdown" lower-Than="{{books.AcquiredValue}}"/>
+
+                            </td>
+                        </tr>
+                        <tr class="sep2 divider dividerempty" data-ng-show="hideDepreciation">
+                            <td class="">
+
+                            </td>
+                        </tr>         
+                        <!--S179 Popup Window lie below this-->
+                        <tr style="display:none"><td><div kendo-window="S179modal" k-title="false" k-visible="false" k-modal="false" id="S179Popup_{{$index}}" class="S179modalWindow">
+                                                         <div class="S179modalLabelCheck">
+                                                             <label>Is S179 Qualified</label>
+                                                             <input type="checkbox" ng-model="books.S179.IsS179Qualified" ng-disabled="nots179Qualified" />
+                                                         </div>
+                                                         <label class="label2">Classification</label>
+                                                         <select name="S179Classification" class="txt_dropdown" id="S179Classification_{{books.Name}}" kendo-drop-down-list k-data-source="Classifications" k-data-text-field="'Code'" k-data-value-field="'Code'" data-ng-model="books.S179.Classification" data-ng-disabled="! books.S179.IsS179Qualified" class="txt_dropdown">
+                                                         </select>
+
+                                                         <label class="label3">S179 Amount</label>
+                                                         <input type="text" kendo-numeric-text-box k-spinners="false" class="grid_2" k-format="'c'" k-ng-model="books.Selecteds179" data-ng-model="books.Selecteds179" data-ng-disabled="! books.S179.IsS179Qualified" k-min="'0'" k-max="{{books.AcquiredValue}}" />
+
+                                                         <div class="S179modalWindowButtons">
+                                                             <button data-ng-click="S179Cancel()" class="btn-secondary btn-minipopup btn-minipopup-cancel">Cancel</button>
+                                                             <button data-ng-click="S179Ok()" class="btn-primary btn-minipopup btn-minipopup-save" data-ng-disabled="! books.S179.IsS179Qualified">Save</button>
+                                                         </div>
+                                                     </div></td></tr>
+
+                        <tr style="display:none"><td><div kendo-window="BUmodal" k-title="false" k-visible="false" k-modal="false" id="BUPopup_{{$index}}" class="S179modalWindow">
+                                                         <div class="S179modalLabelCheck">
+                                                             <input type="checkbox" data-ng-model="books.BusinessUse.Is100" data-ng-init="books.BusinessUse.Is100=true" /><label>100% Business Use</label>
+                                                         </div>
+                                                         <label class="label2">New FY Year Begin</label>
+
+                                                         <select data-ng-model="books.BusinessUse.BusinessUsePercentYear" id="BusinessUsePercentYear_{{books.Name}}" kendo-drop-down-list k-data-source="books.BusinessUse.BusinessUsePercentList" data-ng-disabled="books.BusinessUse.Is100">
+                                                         </select>
+                                                         <label class="label3">Business Use %</label>
+                                                         <input type="text" id="BusinessUsePercent_{{books.Name}}" name="BusinessUsePercent" k-ng-model="books.BusinessUse.Percent" data-ng-disabled="books.BusinessUse.Is100" kendo-numeric-text-box k-spinners="false" k-min="'1'" k-max="'100'" class="gird_culm_13" required />
+
+                                                         <div class="S179modalWindowButtons">
+                                                             <button data-ng-click="BUCancel()" class="btn-secondary btn-minipopup-cancel">Cancel</button>
+                                                             <button data-ng-click="BUOk()" data-ng-disabled="books.BusinessUse.Is100 || AssetForm.BusinessUsePercent.$error.required" class="btn-primary btn-minipopup-save">Save</button>
+                                                         </div>
+                                                         <a data-ng-click="BUDetailWindow.open()" href="#" class="BUmodalLink">Show the list</a>
+                                                     </div></td></tr>
+
+                        <!--Business Use detail popup lie below-->
+            
+            <tr style="display:none"><td><div kendo-window="BUDetailmodal" k-title="true" k-visible="false" k-modal="true">
+	                                         <div class="pisdate">
+	                                             <div class="grid_2">
+	                                                 <label>PIS Date :</label><label class="list_popup">{{books.PisDate|date:'yyyy-MM-dd'}}</label>
+	                                             </div>
+	                                             <div class="grid_2">
+	                                                 <label>Estimated Life :</label><label class="list_popup">{{books.maskedEstimatedLife}}</label>
+	                                             </div>
+	                                             <div class="grid_2 popupcheckbox">
+	                                                 <input type="checkbox" data-ng-model="books.BusinessUse.Is100" data-ng-init="books.BusinessUse.Is100=true" /><label class="">100% Business use</label>
+	                                             </div>
+	                                         </div>
+
+	                                         <div class="1">
+                                                 <div class="yearbigin grid_5">
+                                                 <label>New FY Year Begin</label>
+	                                             <select class="" data-ng-model="books.BusinessUse.BusinessUsePercentYear" id="BusinessUse%Year_{{books.Name}}" kendo-drop-down-list="BuYearsDropdown" k-data-source="books.BusinessUse.BusinessUsePercentList" data-ng-disabled="BUDetailDisableAdd()">
+	                                             </select>
+
+                                                     </div>
+                                                 <div class="bizpercent">
+	                                             <label>Business Use %</label>
+	                                             <input type="text" class="" id="BusinessUse%_{{books.Name}}" k-ng-model="books.BusinessUse.Percent" data-ng-model="books.BusinessUse.Percent" data-ng-disabled="books.BusinessUse.Is100" kendo-numeric-text-box k-spinners="false" k-min="'1'" k-max="'100'" />
+	                                             <input type="button" value="Add" data-ng-click="AddBusinessUse()" data-ng-disabled="BUDetailDisableAdd()" />
+	                                         </div>
+
+	                                         </div>
+	                                         @*<div class ="container123">
+                                                <div class="console">
+                                                    <select id="myListBox" name="myListBox" multiple="multiple" class="console" data-ng-options="buyears.Message for buyears in books.BusinessUse.BUPercentageYears" data-ng-model="books.BusinessUse.AddedBusinessUses">
+                                                    </select>
+                                                </div>
+                                                </div>*@
+                <div class="submitfield">
+	                                         <ul>
+	                                             <li data-ng-repeat="businessUse in books.BusinessUse.BUPercentageYears">{{businessUse.Message}}</li>
+	                                         </ul>
+	                                        @* <input type="button" data-ng-click="BUDetailCancel()" value="Cancel" />
+	                                         <input type="button" data-ng-click="BUDetailOk()" value="Save" data-ng-disabled="books.BusinessUse.Is100" />*@
+
+
+                         <button class="btn btn-primary" id="SaveAsset" data-ng-click="BUDetailOk()" data-ng-disabled="books.BusinessUse.Is100">Save</button>
+     
+            <button class="btn btn-secondary" type="button"  data-ng-click="BUDetailCancel()">Cancel</button>
+                                    </div>
+	                                     </div> </td></tr>
+
+	        <tr style="display:none"> <td>
+                                                      <input type="hidden" value="{{books.CompanyId}}" data-ng-model="CompanyId" data-ng-init="CompanyId=books.CompanyId" >
+                                                      <input type="hidden" value="{{books.CompanyBookId}}" data-ng-model="CompanyBookId" data-ng-init="CompanyBookId=books.CompanyBookId" id="bookTable_{{books.CompanyBookId}}">
+                                                      <input type="hidden" value="{{books.CalendarId}}" data-ng-model="CalendarId" data-ng-init="CalendarId=books.CalendarId">
+                                                      <input type="hidden" value="{{books.IsCustom}}" data-ng-model="IsCustom" data-ng-init="IsCustom=books.IsCustom">
+                                                      <input type="hidden" value="{{books.IsEmulated}}" data-ng-model="IsEmulated" data-ng-init="IsEmulated=books.IsEmulated"></td></tr>
+
+                        @*<tr style="display:none"><div kendo-window="CriticalDeprmodal" k-title="true" k-visible="false" k-modal="true">
+                                        <label class="grid_2">There will be a critical depreciation change. Do you want to continue?</label>
+                                        <input type="button" data-ng-click="CriticalDeprCancel()" value="Cancel" />
+                                        <input type="button" data-ng-click="CriticalDeprOk()" value="Save" />
+                                        <input type="hidden" id="hdnDeprCriticalField" />
+                                    </div></tr>*@
+                              
+                    </table>
+                    <div class="depreciationgrid" data-ng-show="hideDepreciation">
+                        @{
+
+                            Html.RenderPartial("DepreciationValuesRight");
+                        }
+                    </div>
+
+                </div>
+                 	
+            </div> 		
+
+        </li>
+        @*<li class="k-state-active" id="DepreciationValuesSubPanel" disabled="disabled">Depreciation Values
+                            <div style="overflow-x: auto; width: auto">
+                                @{
+
+                                    Html.RenderPartial("_DepreciationDetails");
+                                }
+
+                            </div>
+        </li>*@
+    </ul>
+    </div>
+ 
+ 
+<style type="text/css">
+     .autocorrect-input input {
+        background-color: #FFFF99;
+    }
+      .autocorrect-select select {
+        background-color: #FFFF99;
+    }
+     /*.input.ng-valid.ng-dirty {
+         background-color: #78FA89;
+     }
+    input.ng-invalid.ng-dirty {
+        background-color: #FA787E;
+    }*/
+     .validity-alert {
+    box-shadow: 2px 2px 5px #E8673B;
+    background: rgb(255, 255, 255);
+    background: rgba(255, 255, 255, 0.9);
+    color: #000;
+    font: 12px arial;
+}
+</style>
